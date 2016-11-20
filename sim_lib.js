@@ -4,7 +4,7 @@
 
 var Env = {};
 Env.context = null;
-Env.tolerance = 1e-6;
+Env.tolerance = 1e-10;
 
 /**/
 
@@ -30,6 +30,9 @@ function Vec2D(x, y) {
     this.x = x;
     this.y = y;
 
+    this.c_abs_f = false;
+    this.c_abs = 0;
+
     this.neg = function() {
         return new Vec2D(-this.x, -this.y);
     }
@@ -51,7 +54,11 @@ function Vec2D(x, y) {
     }
 
     this.abs = function() {
-        return Math.sqrt(this.mulVi(this));
+	if(this.c_abs_f != true){
+            this.c_abs = Math.sqrt(this.mulVi(this));
+	    this.c_abs_f = true;
+	}
+	return this.c_abs;
     }
     this.unit = function() {
         return this.divS(this.abs());
@@ -139,6 +146,9 @@ function Vec3D(x, y, z) {
     this.y = y;
     this.z = z;
 
+    this.c_abs_f = false;
+    this.c_abs = 0;
+
     this.neg = function() {
         return new Vec3D(-this.x, -this.y, -this.z);
     }
@@ -164,7 +174,11 @@ function Vec3D(x, y, z) {
     }
 
     this.abs = function() {
-        return Math.sqrt(this.mulVi(this));
+	if(this.c_abs_f != true){
+            this.c_abs = Math.sqrt(this.mulVi(this));
+            this.c_abs_f = true;
+        }
+        return this.c_abs;
     }
     this.unit = function() {
         return this.divS(this.abs());
@@ -254,31 +268,20 @@ Mat3D.rot = function(v, rad) {
 var AVec3D = {}; // angular vector
 AVec3D.asm = function(v, s) {
     var t = v.abs();
-    if(t > Env.tolerance){
-        return v.mulS(s/t);
-    }else{
-        return new Vec3D(0, 0, 0);
-    }
+    return v.mulS(s/t);
 }
 AVec3D.dasm = function(av) {
     var s = av.abs();
-    if(s > Env.tolerance){
-        return [av.divS(s), s];
-    }else{
-        return [new Vec3D(0, 0, 0), 0];
-    }
+    return [av.divS(s), s];
 }
 AVec3D.mod2pi = function(av) {
     var s = av.abs();
-    if(s > Env.tolerance){
-        var t = s;
-        while(t >= Math.PI*2){
-            t = t - Math.PI*2;
-        }
-        return av.mulS(t/s);
-    }else{
-        return new Vec3D(0, 0, 0);
+
+    var t = s;
+    while(t >= Math.PI*2){
+        t = t - Math.PI*2;
     }
+    return av.mulS(t/s);
 }
 AVec3D.rot = function(av) {
     var vs = AVec3D.dasm(av);
@@ -341,21 +344,25 @@ Box2D.shadow_edge = function(u, m) {
 }
 
 Box2D.magnet_sub = function(c, v, o) {
-    var mg, sc, sv, so, u;
+    var sv, sd, u;
+    var mg, s, k;
 
     sv = v.abs();
     u = v.divS(sv);
 
-    sc = u.mulVi(c);
-    so = u.mulVi(o);
-
-    if(so < sc - sv){
-	mg = [v.neg(), 0];
-    }else if(so > sc + sv){
-	mg = [v, 0];
+    sd = u.mulVi(o) - u.mulVi(c);
+    if(sd < - sv){
+	s = -sv;
+	k = 0;
+    }else if(sd > sv){
+	s = sv;
+	k = 0;
     }else{
-	mg = [u.mulS(so - sc), 1];
+	s = sd;
+	k = 1;
     }
+    mg = [u.mulS(s), k]
+
     return mg;
 }
 Box2D.magnet = function(c1, m1, c2, m2) {
@@ -364,7 +371,7 @@ Box2D.magnet = function(c1, m1, c2, m2) {
     var p2 = Box2D.shadow_edge(c1.subV(c2).unit(), m2);
     var k1, k2;
 
-    var num = 0;
+//    var num = 0;
     var err = Number.MAX_VALUE;
     var pr = Number.MAX_VALUE;
     while(err > Env.tolerance){
@@ -389,9 +396,9 @@ Box2D.magnet = function(c1, m1, c2, m2) {
         err = Math.abs(r - pr);
         pr = r;
 
-        num++;
+//        num++;
     }
-    console.log(num);
+//    console.log(num);
 
     return [[p1, k1], [p2, k2]];
 }
@@ -425,7 +432,7 @@ Box3D.shadow_check = function(u, c1, m1, c2, m2) {
         + Math.abs(u.mulVi(m2.v2))
         + Math.abs(u.mulVi(m2.v3));
 
-    return sc -(sv1 + sv2);
+    return sc - (sv1 + sv2);
 }
 Box3D.collision_check = function(c1, m1, c2, m2) {
 
@@ -467,21 +474,25 @@ Box3D.shadow_edge = function(u, m) {
 }
 
 Box3D.magnet_sub = function(c, v, o) {
-    var mg, sc, sv, so, u;
+    var sv, sd, u;
+    var mg, s, k;
 
     sv = v.abs();
     u = v.divS(sv);
 
-    sc = u.mulVi(c);
-    so = u.mulVi(o);
-
-    if(so < sc - sv){
-	mg = [v.neg(), 0];
-    }else if(so > sc + sv){
-	mg = [v, 0];
+    sd = u.mulVi(o) - u.mulVi(c);
+    if(sd < - sv){
+	s = -sv;
+	k = 0;
+    }else if(sd > sv){
+	s = sv;
+	k = 0;
     }else{
-	mg = [u.mulS(so - sc), 1];
+	s = sd;
+	k = 1;
     }
+    mg = [u.mulS(s), k]
+
     return mg;
 }
 Box3D.magnet = function(c1, m1, c2, m2) {
@@ -490,7 +501,7 @@ Box3D.magnet = function(c1, m1, c2, m2) {
     var p2 = Box3D.shadow_edge(c1.subV(c2).unit(), m2);
     var k1, k2;
 
-    var num = 0;
+//    var num = 0;
     var err = Number.MAX_VALUE;
     var pr = Number.MAX_VALUE;
     while(err > Env.tolerance){
@@ -517,9 +528,9 @@ Box3D.magnet = function(c1, m1, c2, m2) {
         err = Math.abs(r - pr);
         pr = r;
 
-        num++;
+//        num++;
     }
-    console.log(num);
+//    console.log(num);
 
     return [[p1, k1], [p2, k2]];
 }
@@ -660,6 +671,7 @@ Obj2D.collision_update = function(o1, o2, r, n, e) {
 
     var jr = jrc / jrm;
 
+
     var newvl1 = vl1.subV(n.mulS(kl1 * jr));
     var newvl2 = vl2.addV(n.mulS(kl2 * jr));
 //    var newva1 = va1.subV(ka1.mulS(jr));
@@ -755,6 +767,7 @@ Obj3D.collision_update = function(o1, o2, r, n, e) {
     var jrm = kl1 + kl2 + ka1.addV(ka2).mulVi(n);
 
     var jr = jrc / jrm;
+//    console.log(jr);
 
     var newvl1 = vl1.subV(n.mulS(kl1 * jr));
     var newvl2 = vl2.addV(n.mulS(kl2 * jr));

@@ -8,7 +8,7 @@ onload = function () {
 
     /**/
 
-    var sim2D = false;
+    var sim2D = true;
     var sim3D = !sim2D;
 
     var timer;//タイマー

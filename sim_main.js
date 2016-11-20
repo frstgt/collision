@@ -19,19 +19,6 @@ onload = function () {
 
         this.obj = [];
 
-/*
-	var w = new Obj2D([new Vec2D(250,250), 0],
-			  [new Vec2D(0,0), 0],
-			  1e10, new Vec2D(50, 50));
-	this.obj.push(w);
-*/
-/*
-	var w = new Obj2D([new Vec2D(-250,250), 0],
-			  [new Vec2D(0,0), 0],
-			  1, new Vec2D(250, 250));
-	this.obj.push(w);
-*/
-
         while(this.obj.length < num){
             var o = func();
             var c = false;
@@ -47,21 +34,22 @@ onload = function () {
         }
 
         this.collision = [];
-	this.collision_count = 0;
 
-	this.border_bound = function(w, o) {
+	this.border_bound = function(w, o, e) {
 	    if(Math.abs(o.pl.x - w.pl.x) > w.sz.x){
-		o.vl.x = -o.vl.x;
+		o.vl.x = -e * o.vl.x;
 	    }
 	    if(Math.abs(o.pl.y - w.pl.y) > w.sz.y){
-		o.vl.y = -o.vl.y;
+		o.vl.y = -e * o.vl.y;
 	    }
 	}
         this.update = function(dt){
 
-            // update object
+	    var new_obj = [];
+
+            // create new object
             for(var i=0; i<this.obj.length; i++) {
-                this.obj[i] = this.obj[i].update(dt);
+                new_obj.push(this.obj[i].update(dt));
             }
 
             // collision check
@@ -69,8 +57,8 @@ onload = function () {
             for(var o1_i=0; o1_i<this.obj.length; o1_i++) {
                 for(var o2_i=0; o2_i<this.obj.length; o2_i++) {
                     if(o1_i < o2_i){
-			var c = Obj2D.collision_check(this.obj[o1_i],
-						      this.obj[o2_i]);
+			var c = Obj2D.collision_check(new_obj[o1_i],
+						      new_obj[o2_i]);
 			if(c){
                             this.collision.push([o1_i, o2_i]);
 			}
@@ -78,12 +66,17 @@ onload = function () {
                 }
             }
 
-            if(this.collision.length > 0){
-		collision_count ++;
-
-		for(var i=0; i<this.obj.length; i++) {
-                    this.obj[i] = this.obj[i].update(-dt * collision_count);
+            if(this.collision.length <= 0){
+		// update
+		for(var i=0; i<this.obj.length; i++){
+		    this.obj[i] = new_obj[i];
 		}
+
+		// world bound
+		for(var i=0; i<this.obj.length; i++) {
+                    this.border_bound(this, this.obj[i], 0.99);
+		}
+	    }else{
 
 		for(var i=0; i<this.collision.length; i++){
                     var o1_i = this.collision[i][0];
@@ -102,13 +95,6 @@ onload = function () {
 		    this.obj[o1_i] = oo[0];
 		    this.obj[o2_i] = oo[1];
 		}
-            }else{
-		collision_count = 0;
-	    }
-
-            // world bound
-            for(var i=0; i<this.obj.length; i++) {
-                this.border_bound(this, this.obj[i]);
             }
         }
         this.draw = function(){
@@ -144,24 +130,25 @@ onload = function () {
             }
         }
         this.collision = [];
-	this.collision_count = 0;
 
-	this.border_bound = function(w, o) {
+	this.border_bound = function(w, o, e) {
 	    if(Math.abs(o.pl.x - w.pl.x) > w.sz.x){
-		o.vl.x = -o.vl.x;
+		o.vl.x = -e * o.vl.x;
 	    }
 	    if(Math.abs(o.pl.y - w.pl.y) > w.sz.y){
-		o.vl.y = -o.vl.y;
+		o.vl.y = -e * o.vl.y;
 	    }
 	    if(Math.abs(o.pl.z - w.pl.z) > w.sz.z){
-		o.vl.z = -o.vl.z;
+		o.vl.z = -e * o.vl.z;
 	    }
 	}
         this.update = function(dt){
 
-            // update object
+	    var new_obj = [];
+
+            // create new object
             for(var i=0; i<this.obj.length; i++) {
-                this.obj[i] = this.obj[i].update(dt);
+                new_obj.push(this.obj[i].update(dt));
             }
 
             // collision check
@@ -169,8 +156,8 @@ onload = function () {
             for(var o1_i=0; o1_i<this.obj.length; o1_i++) {
                 for(var o2_i=0; o2_i<this.obj.length; o2_i++) {
                     if(o1_i < o2_i){
-                        var c = Obj3D.collision_check(this.obj[o1_i],
-                                                      this.obj[o2_i]);
+                        var c = Obj3D.collision_check(new_obj[o1_i],
+                                                      new_obj[o2_i]);
                         if(c){
                             this.collision.push([o1_i, o2_i]);
 			}
@@ -178,12 +165,17 @@ onload = function () {
                 }
             }
 
-            if(this.collision.length > 0){
-		collision_count ++;
-
+            if(this.collision.length <= 0){
+		// update
 		for(var i=0; i<this.obj.length; i++) {
-                    this.obj[i] = this.obj[i].update(-dt * collision_count);
+                    this.obj[i] = new_obj[i];
 		}
+
+		// world bound
+		for(var i=0; i<this.obj.length; i++) {
+                    this.border_bound(this, this.obj[i], 0.99);
+		}
+	    }else{
 
 		for(var i=0; i<this.collision.length; i++){
                     var o1_i = this.collision[i][0];
@@ -202,13 +194,6 @@ onload = function () {
 		    this.obj[o1_i] = oo[0];
 		    this.obj[o2_i] = oo[1];
 		}
-            }else{
-		collision_count = 0;
-	    }
-
-            // world bound
-            for(var i=0; i<this.obj.length; i++) {
-                this.border_bound(this, this.obj[i]);
             }
         }
         this.draw = function(){
