@@ -8,7 +8,7 @@ onload = function () {
 
     /**/
 
-    var sim2D = true;
+    var sim2D = false;
     var sim3D = !sim2D;
 
     var timer;//タイマー
@@ -19,10 +19,10 @@ if(sim2D){
     var c2 = new Vec2D(canvas.width * 0.75, canvas.height * 0.5);
 
     var m1 = new Mat2D(new Vec2D(100, 0), new Vec2D(0, 80));
-    var m1r = Mat2D.rot(Scalar.deg2rad(-0.3));
+    var m1r = Mat2D.rmat_new(Scalar.deg2rad(-0.3));
 
     var m2 = new Mat2D(new Vec2D(120, 0), new Vec2D(0, 60));
-    var m2r = Mat2D.rot(Scalar.deg2rad(0.7));
+    var m2r = Mat2D.rmat_new(Scalar.deg2rad(0.7));
 }
 
 if(sim3D){
@@ -32,12 +32,12 @@ if(sim3D){
     var m1 = new Mat3D(new Vec3D(100, 0, 0),
                        new Vec3D(0, 80, 0),
                        new Vec3D(0, 0, 60));
-    var m1r = Mat3D.rot(new Vec3D(2,3,7).unit(), Scalar.deg2rad(0.3));
+    var m1r = Mat3D.rmat_new(new Vec3D(2,3,7).unit(), Scalar.deg2rad(0.3));
 
     var m2 = new Mat3D(new Vec3D(120, 0, 0),
                        new Vec3D(0, 60, 0),
                        new Vec3D(0, 0, 40));
-    var m2r = Mat3D.rot(new Vec3D(11,13,17).unit(), Scalar.deg2rad(0.7));
+    var m2r = Mat3D.rmat_new(new Vec3D(11,13,17).unit(), Scalar.deg2rad(0.7));
 }
 
     var loop = function() {

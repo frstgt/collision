@@ -8,7 +8,7 @@ onload = function () {
 
     /**/
 
-    var sim2D = false;
+    var sim2D = true;
     var sim3D = !sim2D;
     var objNum = 5;
 
@@ -213,14 +213,27 @@ onload = function () {
     var delay = 10;//タイマーを実行する間隔
 
     var obj2d_rand = function() {
-        return new Obj2D([Vec2D.rand(0, 500), Scalar.rand(0, 10)],
-                         [Vec2D.rand(200, 500), Scalar.rand(50, 100)],
+        return new Obj2D([Vec2D.rand(0, 500),
+			  Scalar.rand(0, Math.PI/4)],
+                         [Vec2D.rand(200, 500),
+			  Scalar.rand(0, Math.PI/4)],
                          Scalar.rand(1e-6, 5e-6), Vec2D.rand(50, 100));
     }
+
     var obj3d_rand = function() {
-        return new Obj3D([Vec3D.rand(0, 500), Vec3D.rand(0, 10)],
-                         [Vec3D.rand(200, 500), Vec3D.rand(50, 100)],
+if(Env.qut_en){
+        return new Obj3D([Vec3D.rand(0, 500),
+			  Qut.aqut_rand(-Math.PI/4, Math.PI/4)],
+                         [Vec3D.rand(200, 500),
+			  Vec3D.avec_rand(-Math.PI/4, Math.PI/4)],
                          Scalar.rand(1e-6, 5e-6), Vec3D.rand(50, 100));
+}else{
+        return new Obj3D([Vec3D.rand(0, 500),
+			  Vec3D.avec_rand(-Math.PI/4, Math.PI/4)],
+                         [Vec3D.rand(200, 500),
+			  Vec3D.avec_rand(-Math.PI/4, Math.PI/4)],
+                         Scalar.rand(1e-6, 5e-6), Vec3D.rand(50, 100));
+}
     }
 
 var w;
