@@ -115,12 +115,16 @@ onload = function () {
 
     var obj3d_rand = function() {
 if(Env.qut_en){
-        return new Obj3D([Vec3D.rand(0, 500), Qut.aqut_rand()],
-                         [Vec3D.rand(200, 500), Qut.aqut_rand()],
+        return new Obj3D([Vec3D.rand(0, 500),
+			  Qut.aqut_rand(-Math.PI/4, Math.PI/4)],
+                         [Vec3D.rand(200, 500),
+			  Vec3D.avec_rand(-Math.PI/4, Math.PI/4)],
                          Scalar.rand(1e-6, 5e-6), Vec3D.rand(50, 100));
 }else{
-        return new Obj3D([Vec3D.rand(0, 500), Vec3D.avec_rand()],
-                         [Vec3D.rand(200, 500), Vec3D.avec_rand()],
+        return new Obj3D([Vec3D.rand(0, 500),
+			  Vec3D.avec_rand(-Math.PI/4, Math.PI/4)],
+                         [Vec3D.rand(200, 500),
+			  Vec3D.avec_rand(-Math.PI/4, Math.PI/4)],
                          Scalar.rand(1e-6, 5e-6), Vec3D.rand(50, 100));
 }
     }

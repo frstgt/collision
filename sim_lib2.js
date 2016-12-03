@@ -6,7 +6,7 @@ var Env = {};
 Env.context = null;
 Env.tolerance = 1e-10;
 
-Env.qut_en = true
+Env.qut_en = false
 
 /**/
 
@@ -77,9 +77,6 @@ function Vec3D(x, y, z) { // vector 3 dimension
     this.to2d = function() {
 	return new Vec2D(this.x, this.y);
     }
-    this.clone = function() {
-        return new Vec3D(this.x, this.y, this.z);
-    }
     this.draw = function(center) {
         Env.context.moveTo(center.x, center.y);
         Env.context.lineTo(center.x + this.x, center.y + this.y);
@@ -88,18 +85,20 @@ function Vec3D(x, y, z) { // vector 3 dimension
 }
 
 Vec3D.rand = function(min, max) {
-    return new Vec3D(Scalar.rand(min, max),
-		     Scalar.rand(min, max),
-		     Scalar.rand(min, max));
+    var x = Scalar.rand(min, max);
+    var y = Scalar.rand(min, max);
+    var z = Scalar.rand(min, max);
+    return new Vec3D(x, y, z);
 }
 
 Vec3D.avec_new = function(u, t) { // angular vec new
     return u.mulS(t);
 }
-Vec3D.avec_rand = function() {
-    var u = Vec3D.rand(-1, 1).unit();
-    var t = Scalar.rand(0, Math.PI/180 * 30);
-    return Vec3D.avec_new(u, t);
+Vec3D.avec_rand = function(min, max) {
+    var x = Scalar.rand(-1, 1);
+    var y = Scalar.rand(-1, 1);
+    var z = Scalar.rand(-1, 1);
+    return new Vec3D(x, y, z).unit().mulS(Scalar.rand(min, max));
 }
 
 /**/
@@ -146,10 +145,6 @@ function Qut(s, v){ // quaternion
     this.conj = function() {
 	return new Qut(this.s, this.v.neg());
     }
-
-    this.clone = function() {
-        return new Qut(this.s, this.v);
-    }
 };
 
 Qut.aqut_new = function(u, t) { // angular qut new
@@ -172,8 +167,8 @@ Qut.avec2aqut = function(av) { // angular vec to angular qut
     return new Qut(s, v);
 }
 
-Qut.aqut_rand = function() {
-    var av = Vec3D.avec_rand();
+Qut.aqut_rand = function(min, max) {
+    var av = Vec3D.avec_rand(min, max);
     return Qut.avec2aqut(av);
 }
 
@@ -210,9 +205,6 @@ function Mat3D(v1, v2, v3) {
                                    mt.v3.mulVi(m.v3)));
     }
 
-    this.clone = function() {
-        return new Mat3D(this.v1.clone(), this.v2.clone(), this.v3.clone());
-    }
     this.draw = function(center) {
         this.v1.draw(center);
         this.v2.draw(center);
@@ -456,7 +448,7 @@ function Obj3D(pos, vel, mass, size) {
     this.pl = pos[0];                   // Vec3D
     this.pa = pos[1];                   // Qut
     this.vl = vel[0];                   // Vec3D
-    this.va = vel[1];                   // Qut
+    this.va = vel[1];                   // Vec3D
     this.ml = mass;                     // Scalar
 
 if(Env.qut_en){
@@ -480,7 +472,7 @@ if(Env.qut_en){
         var newpl = this.pl.addV(this.vl.mulS(dt)); // Vec3D
 	var newpa;
 if(Env.qut_en){
-        var vadt = Qut.avec2aqut(Qut.aqut2avec(this.va).mulS(dt));
+        var vadt = Qut.avec2aqut(this.va.mulS(dt));
         newpa = vadt.mulQ(this.pa).mulQ(vadt.conj()); // Qut
 }else{
         newpa = this.pa.addV(this.va.mulS(dt)); // Vec3D
@@ -515,27 +507,21 @@ Obj3D.collision_update = function(o1, o2, r, n, e) {
     var pl1 = o1.pl; // Vec3D
     var pa1 = o1.pa; // Qut
     var vl1 = o1.vl; // Vec3D
-    var va1 = o1.va; // Qut
+    var va1 = o1.va; // Vec3D
     var ml1 = o1.ml; // Mat3D
     var ma1 = o1.ma; // Mat3D
     var pl2 = o2.pl; // Vec3D
     var pa2 = o2.pa; // Qut
     var vl2 = o2.vl; // Vec3D
-    var va2 = o2.va; // Qut
+    var va2 = o2.va; // Vec3D
     var ml2 = o2.ml; // Mat3D
     var ma2 = o2.ma; // Mat3D
 
     var r1 = r.subV(pl1);                            // Vec3D
     var r2 = r.subV(pl2);                            // Vec3D
 
-    var v1, v2;
-if(Env.qut_en){
-    v1 = vl1.addV(Qut.aqut2avec(va1).mulVo(r1)); // Vec3D
-    v2 = vl2.addV(Qut.aqut2avec(va2).mulVo(r2)); // Vec3D
-}else{
-    v1 = vl1.addV(va1.mulVo(r1)); // Vec3D
-    v2 = vl2.addV(va2.mulVo(r2)); // Vec3D
-}
+    var v1 = vl1.addV(va1.mulVo(r1));                // Vec3D
+    var v2 = vl2.addV(va2.mulVo(r2));                // Vec3D
     var vr = v2.subV(v1);                            // Vec3D
     var jrc = -(1+e) * vr.mulVi(n);                  // Scalar
 
@@ -549,16 +535,10 @@ if(Env.qut_en){
 //    console.log(jr);
 
 
-    var newvl1 = vl1.addV(n.mulS(kl1 * (-jr)));     // Vec3D
-    var newvl2 = vl2.addV(n.mulS(kl2 * ( jr)));     // Vec3D
-    var newva1, newva2;
-if(Env.qut_en){
-    newva1 = va1.mulQ(Qut.avec2aqut(ka1.mulS(-jr))); // Qut
-    newva2 = va2.mulQ(Qut.avec2aqut(ka2.mulS( jr))); // Qut
-}else{
-    newva1 = va1.addV(ka1.mulS(-jr)); // Vec3D
-    newva2 = va2.addV(ka2.mulS( jr)); // Vec3D
-}
+    var newvl1 = vl1.addV(n.mulS(kl1 * (-jr)));      // Vec3D
+    var newvl2 = vl2.addV(n.mulS(kl2 * ( jr)));      // Vec3D
+    var newva1 = va1.addV(ka1.mulS(-jr));            // Vec3D
+    var newva2 = va2.addV(ka2.mulS( jr));            // Vec3D
 
     var newo1 = new Obj3D([o1.pl, o1.pa],
                           [newvl1, newva1],
